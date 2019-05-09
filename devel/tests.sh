@@ -6,18 +6,17 @@ ME_ABOUT='wrapper to peform unit tests'
 ME_USAGE='[<...OPTIONS>] [<TEST-SUITE>] [[--]<...passthru args>]'
 ME_COPYRIGHT='Copyright (c) 2018-2019, Doug Bird. All Rights Reserved.'
 ME_NAME='tests.sh'
-ME_DIR="/$0"; ME_DIR=${ME_DIR%/*}; ME_DIR=${ME_DIR:-.}; ME_DIR=${ME_DIR#/}/; ME_DIR=$(cd "$ME_DIR"; pwd)
 
 #
 # paths
 #
-APP_DIR=$ME_DIR
+[ -n "$APP_DIR" ] || { ME_DIR="/$0"; ME_DIR=${ME_DIR%/*}; ME_DIR=${ME_DIR:-.}; ME_DIR=${ME_DIR#/}/; ME_DIR=$(cd "$ME_DIR"; pwd); APP_DIR=$(cd $ME_DIR/../; pwd); }
 APP_DIR_REALPATH=$(cd "$APP_DIR"; pwd)
-HTML_ROOT=$ME_DIR/web
-DOCS_ROOT=$ME_DIR/docs
-PHPUNIT_BIN=$ME_DIR/vendor/bin/phpunit
-PHPUNIT_TESTS_ROOT=$ME_DIR/tests
-HTML_COVERAGE_ROOT_PREFIX=$DOCS_ROOT/coverage
+HTML_ROOT=$APP_DIR/web
+DOC_ROOT=$APP_DIR/docs
+PHPUNIT_BIN=$APP_DIR/vendor/bin/phpunit
+PHPUNIT_TESTS_ROOT=$APP_DIR/tests
+HTML_COVERAGE_ROOT_PREFIX=$DOC_ROOT/coverage
 HTML_COVERAGE_SYMLINK_PREFIX=$HTML_ROOT/.coverage
 
 #
@@ -32,6 +31,10 @@ CMD_STATUS_DONTUSE="255 $ME_ERROR_USAGE $ME_ERROR_ONE_OR_MORE_TESTS_FAILED $ME_E
 
 print_hint() {
 	echo "  Hint, try: $ME_NAME --usage"
+}
+
+sedescape() {
+   echo "$@" | sed 's/\([[\/.*]\|\]\)/\\&/g'
 }
 
 SKIP_TESTS=0
@@ -49,6 +52,7 @@ while getopts :?qhua-: arg; do { case $arg in
       show-coverage) PRINT_COVERAGE=1;;
       coverage) PRINT_COVERAGE=1;;
       reformat-only|skip-tests) SKIP_TESTS=1; HTML_COVERAGE_REPORT=1; SKIP_COVERAGE_REPORT=1;;
+      '') break ;; # end option parsing
       *) >&2 echo "$ME_NAME: unrecognized long option --$OPTARG"; OPTION_STATUS=$ME_ERROR_USAGE;;
    esac ;; 
    *) >&2 echo "$ME_NAME: unrecognized option -$OPTARG"; OPTION_STATUS=$ME_ERROR_USAGE;;
@@ -71,7 +75,7 @@ if [ "$HELP_MODE" ]; then
    echo "  Test Suite Descriptions:"
    echo "    phpunit: \"Unit\" phpunit test suite; see phpunit.xml"
    echo "       If xdebug is available, a coverage report in text format is (re)generated unless the '--skip-coverage' option is provided."
-   echo "       Coverage report path: $ME_DIR/coverage.txt"
+   echo "       Coverage report path: $DOC_ROOT/coverage.txt"
    echo "       HTML coverage report dir: $HTML_ROOT/.coverage"
    echo ""
    echo "Options:"
@@ -161,9 +165,9 @@ phpunit_html_coverage_check() {
 print_phpunit_text_coverage_path() {
 	 local test_suffix=$1
 	 if [ -z "$test_suffix" ]; then
-	 	  printf "coverage.txt"
+	 	  printf "$DOC_ROOT/coverage.txt"
  	 else
- 	    printf "coverage-$test_suffix.txt"
+ 	    printf "$DOC_ROOT/coverage-$test_suffix.txt"
  	 fi
 }
 
@@ -280,19 +284,30 @@ reformat_html_coverage() {
 }
 
 reformat_txt_coverage() {
-  local test_suffix=$1
-  local coverage_path=
-  local coverage_temp=
-  if phpunit_coverage_check; then
-     coverage_path=$(print_phpunit_text_coverage_path $test_suffix)
-     [ -f "$coverage_path" ] && {
-        coverage_temp=$(dirname "$coverage_path")/.$(basename "$coverage_path")-$(date "+%Y%m%d%H%M%S")
-        tail -n +6 "$coverage_path" > "$coverage_temp"
-        echo "Code Coverage Report:\n" > "$coverage_path"
-        cat "$coverage_temp" >> "$coverage_path"
-        rm -f $coverage_temp
-     }
-  fi
+   [ "$SKIP_COVERAGE_REPORT" != "1" ] || return 0
+   
+   #
+   # prepare temp file
+   rm -rf $DOC_ROOT/.coverage.txt
+   cp $DOC_ROOT/coverage.txt $DOC_ROOT/.coverage.txt
+   
+   #
+   # remove report date
+   MENU_STARTWITH=$(sedescape 'Code Coverage Report:') || return
+   MENU_ENDWITH=$(sedescape ' Summary') || return
+   sed "/^$MENU_STARTWITH/,/^$MENU_ENDWITH/{/^$MENU_STARTWITH/!{/^$MENU_ENDWITH/!d}}" "$DOC_ROOT/.coverage.txt" > "$DOC_ROOT/..coverage.txt"
+   mv "$DOC_ROOT/..coverage.txt" "$DOC_ROOT/.coverage.txt" || return
+   
+   #
+   # trim multi newlines
+   sed '/^$/N;/^\n$/D' "$DOC_ROOT/.coverage.txt" > "$DOC_ROOT/..coverage.txt" || return
+   mv "$DOC_ROOT/..coverage.txt" "$DOC_ROOT/.coverage.txt" || return
+   sed '1{/^$/d}' "$DOC_ROOT/.coverage.txt" > "$DOC_ROOT/..coverage.txt" || return
+   mv "$DOC_ROOT/..coverage.txt" "$DOC_ROOT/.coverage.txt" || return
+   
+   #
+   # copy temp file to coverage.txt
+   mv "$DOC_ROOT/.coverage.txt" "$DOC_ROOT/coverage.txt" || return
 }
 
 
@@ -308,28 +323,16 @@ if [ -n "$TEST_SUITE" ]; then
    #
    if [ "$TEST_SUITE" = "phpunit" ]; then
       phpunit_sanity_check || exit
-      phpunit $(print_phpunit_coverage_opt) "$@" || {
+      echo "phpunit args: $@"
+      phpunit "$@" || {
       	 cmd_status_filter $?
       	 exit
       }
+      reformat_txt_coverage
       print_phpunit_coverage_report
+      reformat_html_coverage
       exit 0
    fi
-   case $TEST_SUITE in
-      phpunit-*)
-      if [ -f "$TEST_SUITE.xml" ]; then
-      	 TEST_SUFFIX=$(echo $file | sed -e 's/phpunit-//g')
-   	     TEST_SUFFIX=$(echo $TEST_SUFFIX | sed -e 's/.xml//g')
-         phpunit_sanity_check || exit
-         phpunit $(print_phpunit_coverage_opt $TEST_SUFFIX) -c "$TEST_SUITE.xml" "$@" || {
-      	    cmd_status_filter $?
-      	    exit
-     	   }
-     	   print_phpunit_coverage_report $TEST_SUFFIX
-         exit 0
-      fi
-      ;; 
-   esac
 
    >&2 echo "$ME_NAME: (FATAL) unrecognized test suite: $TEST_SUITE"
    >&2 print_hint
@@ -350,7 +353,7 @@ phpunit_sanity_check || exit
 #
 TESTS_STATUS=0
 
-echo "print_phpunit_coverage_opt: $(print_phpunit_coverage_opt)"
+echo "phpunit args: $(print_phpunit_coverage_opt)"
 #
 # run all phpunit tests
 #
@@ -360,30 +363,12 @@ if [ "$SKIP_TESTS" = "0" ]; then
    CMD_STATUS=$?
 fi
 if [ "$CMD_STATUS" = "0" ]; then
+    reformat_txt_coverage
 	 print_phpunit_coverage_report
 	 reformat_html_coverage
-	 reformat_txt_coverage
 else
   TESTS_STATUS=$ME_ERROR_ONE_OR_MORE_TESTS_FAILED
 fi
-
-for file in phpunit-*.xml; do
-   [ -f "$file" ] || continue
-   TEST_SUFFIX=$(echo $file | sed -e 's/phpunit-//g')
-   TEST_SUFFIX=$(echo $TEST_SUFFIX | sed -e 's/.xml//g')
-   CMD_STATUS=0
-   if [ "$SKIP_TESTS" = "0" ]; then
-      phpunit $(print_phpunit_coverage_opt $TEST_SUFFIX) -c $(basename $file)
-   fi
-   CMD_STATUS=$?
-   if [ "$CMD_STATUS" = "0" ]; then
-  	  print_phpunit_coverage_report $TEST_SUFFIX
-  	  reformat_html_coverage $TEST_SUFFIX
-  	  reformat_txt_coverage $TEST_SUFFIX
-   else
-      TESTS_STATUS=$ME_ERROR_ONE_OR_MORE_TESTS_FAILED
-   fi
-done
 
 [ "$REFORMAT_STATUS" = "0" ] || {
    >&2 echo "$ME_NAME: failed to reformat one or more HTML coverage reports"

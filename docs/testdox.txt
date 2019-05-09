@@ -1,0 +1,4 @@
+Psr7Http\Tests\Unit\BodyTrait
+ [x] Body from string with data set #0
+ [x] Body from string with data set #1
+

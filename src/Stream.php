@@ -1,37 +1,58 @@
 <?php
+
+/*
+ * This file is part of the psr7-http package.
+ *
+ * (c) D. Bird <retran@gmail.com>, All Rights Reserved.
+ *
+ * For the full copyright and license information, please view the LICENSE
+ * file that was distributed with this source code.
+ */
+
 namespace Psr7Http;
 
 use Psr\Http\Message\StreamInterface;
 use InvalidArgumentException;
 use RuntimeException ;
 
+/**
+ * Stream class
+ *
+ * @author D. Bird <retran@gmail.com>
+ */
 class Stream implements StreamInterface {
    /**
+    *
     * @var resource
     */
    private $handle;
-   
+
    /**
+    *
     * @var array
     */
    private $metadata;
-   
+
    /**
+    *
     * @var bool
     */
    private $isSeekable;
-   
+
    /**
+    *
     * @var bool
     */
    private $isWriteable;
-   
+
    /**
+    *
     * @var bool
     */
    private $isReadable;
-   
+
    /**
+    *
     * @var int
     */
    private static $errorReporting = 0;
@@ -46,11 +67,12 @@ class Stream implements StreamInterface {
       error_clear_last();
       return isset($error['message'])?$error['message']:$fallback;
    }
-   
+
    /**
+    *
     * @param resource $handle
     */
-   public function __construct($handle, bool $is_readable=true,bool $is_seekable=true, bool $is_writeable=false) {
+   public function __construct($handle, bool $is_readable=true, bool $is_seekable=true, bool $is_writeable=false) {
       if (!is_resource($handle)) {
          throw new InvalidArgumentException("handle must be resource, instead got: ".gettype($handle));
       }
@@ -59,7 +81,7 @@ class Stream implements StreamInterface {
       $this->isSeekable = $is_seekable;
       $this->isWriteable = $is_writeable;
    }
-   
+
    public function getMetadata($key = null) {
       if ($this->metadata===null) {
          $this->metadata = stream_get_meta_data($this->handle);
@@ -135,6 +157,7 @@ class Stream implements StreamInterface {
    }
 
    /**
+    *
     * @return resource
     */
    public function detach() {
@@ -144,6 +167,7 @@ class Stream implements StreamInterface {
    }
 
    /**
+    *
     * @return string
     */
    public function getContents() {
@@ -157,6 +181,7 @@ class Stream implements StreamInterface {
    }
 
    /**
+    *
     * @throws \RuntimeException
     */
    public function close() {
@@ -187,5 +212,5 @@ class Stream implements StreamInterface {
       return $this->isReadable;
    }
 
-   
+
 }
