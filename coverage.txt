@@ -1,0 +1,11 @@
+Code Coverage Report:
+
+ Summary:                 
+  Classes:  0.00% (0/5)   
+  Methods:  4.17% (3/72)  
+  Lines:    9.27% (37/399)
+
+\Psr7Http::BodyTrait
+  Methods:   0.00% ( 0/ 1)   Lines:  57.69% ( 15/ 26)
+\Psr7Http::Psr7Http\Stream
+  Methods:  15.79% ( 3/19)   Lines:  27.50% ( 22/ 80)

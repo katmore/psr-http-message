@@ -1,9 +1,9 @@
 # psr7-http
-"bare-bones" PSR-7 compliant HTTP messaging library
+A [PSR-7](https://www.php-fig.org/psr/psr-7/) compliant HTTP messaging library.
 
 ## Features
  * **Implementation Neutral**
-    > I have attempted to make this useful out-of-the-box, but at the same time, neutral to the actual implementation of executing the HTTP requests and obtaining the responses.
+    > I have attempted to make this useful out-of-the-box, while being as neutral as possible as to the actual details of executing the HTTP requests and obtaining the responses.
 
 ## Q&A
 
@@ -12,18 +12,18 @@
   
   > Implementing PSR-7 will provide your project with the potential for greater flexibility and easier code interoperability.
  
-* Why not just use Guzzle?
-  > I actually recommend it: https://github.com/guzzle/psr7
+* Why not just use Guzzle (or Symfony, or Laravel, or...)?
+  > I actually recommend Guzzle (https://github.com/guzzle/psr7); I am providing this as an alternative for those refuse to use Guzzle due to some whim or urge.
   
-  > Guzzle offers an ideal path to incorporate PSR-7 compliant messaging for many PHP projects.
+  > It may further provide useful for circumstances when Guzzle may not best suit the needs of your project.
   
-  > However, this library was created for those who refuse to use Guzzle due to some whim or urge; or simply for those times you want to "roll your own".
-  
-  > It may also be useful for circumstances when Guzzle may not best suit the needs of your project.
+## Documentation
+ * [phpdoc generated documentation](./phpdoc.md)
+ * [class disagram](./classes.svg)
   
 ## Unit Tests
  * [`coverage.txt`](./coverage.txt): unit test coverage report
- * [`phpunit.xml`](./phpunit.xml): PHPUnit configuration file
+ * [`phpunit.xml.dist`](./phpunit.xml.dist): PHPUnit configuration file
  * [`tests/phpunit`](./tests/phpunit): source code for unit tests
 
 To perform unit tests, execute phpunit located in the `vendor/bin` directory.
