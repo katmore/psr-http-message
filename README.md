@@ -18,23 +18,9 @@ A [PSR-7](https://www.php-fig.org/psr/psr-7/) compliant HTTP messaging library.
   > It may further provide useful for circumstances when Guzzle may not best suit the needs of your project.
   
 ## Documentation
- * [phpdoc generated documentation](./phpdoc.md)
- * [class disagram](./classes.svg)
-  
-## Unit Tests
- * [`coverage.txt`](./coverage.txt): unit test coverage report
- * [`phpunit.xml.dist`](./phpunit.xml.dist): PHPUnit configuration file
- * [`tests/phpunit`](./tests/phpunit): source code for unit tests
-
-To perform unit tests, execute phpunit located in the `vendor/bin` directory.
-```sh
-vendor/bin/phpunit
-```
-
-The [`tests.sh`](./tests.sh) wrapper script is provided for convenience.
-```sh
-./tests.sh
-```
+ * [docs/phpdox.md](./docs/phpdox.md) : phpdox generated documentation
+ * [docs/coverage.txt](./docs/coverage.txt): unit test coverage report
+ * [docs/testdox.txt](./docs/testdox.txt): unit test agile documentation
 
 ## Legal
 "psr7-http" is distributed under the terms of the [MIT license](LICENSE) or the [GPLv3](GPLv3) license.
