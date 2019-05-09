@@ -1,4 +1,4 @@
-# psr-http-message
+# psr7-http
 "bare-bones" PSR-7 compliant HTTP messaging library
 
 ## Features
