@@ -1,8 +1,6 @@
 .*
 !/.gitignore
 /vendor/
-phpdoc.xml
-/docs/coverage/
-/docs/phpdoc/
-/build/
+phpdox.xml
+phpunit.xml
 !/**/.gitkeep
